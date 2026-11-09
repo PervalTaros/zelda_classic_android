@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
 
         if (sRuntime == null) {
             GeckoRuntimeSettings settings = new GeckoRuntimeSettings.Builder()
-                    .autoplayDefault(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
+                    .autoplayDefault(0) // 0 = lecture automatique autorisée
                     .build();
             sRuntime = GeckoRuntime.create(this, settings);
         }
