@@ -92,20 +92,22 @@ jobs:
 
       - name: Compiler le lecteur web (zplayer seul)
         working-directory: zc
-        run: cmake --build build_emscripten --config RelWithDebInfo -t web_zplayer
+        run: |
+          cmake --build build_emscripten --config Release -t web_zplayer || \
+          cmake --build build_emscripten --config Release -t web
 
       - name: Archive du lecteur web
         uses: actions/upload-artifact@v4
         with:
           name: lecteur-web
-          path: zc/build_emscripten/RelWithDebInfo/packages/web
+          path: zc/build_emscripten/Release/packages/web
           retention-days: 7
 
       - name: Assembler les ressources de l'application
         run: |
           A=android/app/src/main/assets
           mkdir -p $A/www $A/quests $A/app
-          cp -r zc/build_emscripten/RelWithDebInfo/packages/web/* $A/www/
+          cp -r zc/build_emscripten/Release/packages/web/* $A/www/
           rm -f $A/www/sw.js
           cp -r quests/* $A/quests/
           cp -r launcher/* $A/app/
