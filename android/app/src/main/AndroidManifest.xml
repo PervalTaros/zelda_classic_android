@@ -7,6 +7,8 @@
         android:label="Zelda BS"
         android:hardwareAccelerated="true"
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
+        android:largeHeap="true"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
 
         <activity
