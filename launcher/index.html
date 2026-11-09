@@ -12,11 +12,13 @@
   a.q { display:block; padding:14px 16px; margin:8px 0; background:#2a3f7a; color:#fff;
         text-decoration:none; border-radius:8px; }
   a.q:active { background:#3d58a8; }
+  button.opt { font:inherit; padding:10px 14px; border-radius:8px; border:0; background:#444; color:#fff; margin:4px 0 12px; }
 </style>
 </head>
 <body>
 <h1>Zelda BS</h1>
 <div id="diag" class="diag"></div>
+<button id="touch" class="opt"></button>
 <div id="list">Chargement des quêtes…</div>
 <script>
 const ok = typeof SharedArrayBuffer === 'function' && self.crossOriginIsolated;
@@ -25,6 +27,12 @@ d.className = 'diag ' + (ok ? 'ok' : 'ko');
 d.textContent = ok
   ? 'Moteur : prêt (threads disponibles)'
   : 'Moteur : PROBLÈME — SharedArrayBuffer indisponible (crossOriginIsolated = ' + self.crossOriginIsolated + '). Le jeu ne démarrera pas.';
+
+const tb = document.getElementById('touch');
+function touchOn() { try { return localStorage.getItem('zc_touch') !== '0'; } catch (e) { return true; } }
+function showTouch() { tb.textContent = 'Boutons tactiles à l\'écran : ' + (touchOn() ? 'OUI' : 'NON') + ' (toucher pour changer)'; }
+tb.addEventListener('click', () => { try { localStorage.setItem('zc_touch', touchOn() ? '0' : '1'); } catch (e) {} showTouch(); });
+showTouch();
 
 fetch('../quests/index.json').then(r => r.json()).then(files => {
   const list = document.getElementById('list');

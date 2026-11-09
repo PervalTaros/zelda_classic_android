@@ -1,0 +1,4 @@
+/* Appliqué à la page de jeu : on cache l'interface du site web (À propos, Réglages, etc.) */
+header, .panel, .emscripten .panel-buttons { display: none !important; }
+html, body { background: #000; overflow: hidden; }
+html.zc-no-touch .touch-inputs { display: none !important; }

@@ -15,8 +15,8 @@ import fi.iki.elonen.NanoHTTPD;
 public class LocalServer extends NanoHTTPD {
     private final AssetManager assets;
 
-    public LocalServer(AssetManager assets) {
-        super("127.0.0.1", 0);
+    public LocalServer(AssetManager assets, int port) {
+        super("127.0.0.1", port);
         this.assets = assets;
     }
 
@@ -32,7 +32,22 @@ public class LocalServer extends NanoHTTPD {
 
         try {
             InputStream in = assets.open(path);
-            Response r = newChunkedResponse(Response.Status.OK, mime(path), in);
+            Response r;
+            if (path.startsWith("www/") && path.endsWith(".html")) {
+                // Page de jeu : on y ajoute notre style et notre script (masquer l'interface du site).
+                java.io.ByteArrayOutputStream buf = new java.io.ByteArrayOutputStream();
+                byte[] tmp = new byte[8192];
+                int n;
+                while ((n = in.read(tmp)) > 0) buf.write(tmp, 0, n);
+                in.close();
+                String html = buf.toString("UTF-8");
+                String inject = "<link rel=\"stylesheet\" href=\"/assets/app/app.css\">"
+                        + "<script src=\"/assets/app/app.js\"></script>";
+                html = html.replace("</head>", inject + "</head>");
+                r = newFixedLengthResponse(Response.Status.OK, mime(path), html);
+            } else {
+                r = newChunkedResponse(Response.Status.OK, mime(path), in);
+            }
             addIsolationHeaders(r);
             return r;
         } catch (IOException e) {

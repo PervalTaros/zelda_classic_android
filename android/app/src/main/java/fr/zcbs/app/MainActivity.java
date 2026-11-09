@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.WindowManager;
 
 import org.mozilla.geckoview.GeckoRuntime;
+import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoView;
 
@@ -29,19 +30,36 @@ public class MainActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         enterImmersive();
 
+        // Port fixe : l'adresse (donc le stockage des sauvegardes) reste la même d'un lancement à l'autre.
         try {
-            server = new LocalServer(getAssets());
+            server = new LocalServer(getAssets(), 17846);
             server.start(5000, false);
-        } catch (Exception e) {
-            throw new RuntimeException("Impossible de démarrer le serveur local", e);
+        } catch (Exception e1) {
+            try {
+                server = new LocalServer(getAssets(), 0);
+                server.start(5000, false);
+            } catch (Exception e2) {
+                throw new RuntimeException("Impossible de démarrer le serveur local", e2);
+            }
         }
         startUrl = "http://127.0.0.1:" + server.getListeningPort() + "/assets/app/index.html";
 
         geckoView = new GeckoView(this);
         setContentView(geckoView);
 
-        if (sRuntime == null) sRuntime = GeckoRuntime.create(this);
+        if (sRuntime == null) {
+            GeckoRuntimeSettings settings = new GeckoRuntimeSettings.Builder()
+                    .autoplayDefault(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
+                    .build();
+            sRuntime = GeckoRuntime.create(this, settings);
+        }
         session = new GeckoSession();
+        // Le simple fait d'avoir un délégué permet à la page de demander le plein écran
+        // (l'application est déjà en plein écran immersif).
+        session.setContentDelegate(new GeckoSession.ContentDelegate() {
+            @Override
+            public void onFullScreen(GeckoSession s, boolean fullScreen) { }
+        });
         session.open(sRuntime);
         geckoView.setSession(session);
         session.loadUri(startUrl);
