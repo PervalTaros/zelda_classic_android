@@ -1,0 +1,56 @@
+name: APK seulement (réutilise un lecteur web déjà compilé)
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Numéro de l'exécution « Construire l'APK » qui a réussi (dans son adresse : .../actions/runs/NUMERO)"
+        required: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Télécharger le lecteur web déjà compilé
+        uses: actions/download-artifact@v4
+        with:
+          name: lecteur-web
+          path: web-dl
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Assembler les ressources de l'application
+        run: |
+          A=android/app/src/main/assets
+          mkdir -p $A/www $A/quests $A/app
+          cp -r web-dl/* $A/www/
+          rm -f $A/www/sw.js
+          cp -r quests/* $A/quests/
+          cp -r launcher/* $A/app/
+          python3 scripts/make_index.py $A/quests
+          du -sh $A
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.11.1
+
+      - name: Choisir la version de GeckoView
+        run: python3 scripts/set_gecko_version.py 135
+
+      - name: Construire l'APK
+        working-directory: android
+        run: gradle assembleDebug --no-daemon
+
+      - name: Publier l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: zelda-bs-apk
+          path: android/app/build/outputs/apk/debug/*.apk
