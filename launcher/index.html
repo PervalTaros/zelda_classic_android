@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Zelda BS</title>
+<style>
+  body { margin:0; background:#111; color:#eee; font:18px sans-serif; padding:16px; }
+  h1 { font-size:22px; margin:0 0 8px; }
+  .diag { font-size:14px; padding:8px 10px; border-radius:6px; margin:8px 0 16px; }
+  .ok { background:#14391f; } .ko { background:#4a1a1a; }
+  a.q { display:block; padding:14px 16px; margin:8px 0; background:#2a3f7a; color:#fff;
+        text-decoration:none; border-radius:8px; }
+  a.q:active { background:#3d58a8; }
+</style>
+</head>
+<body>
+<h1>Zelda BS</h1>
+<div id="diag" class="diag"></div>
+<div id="list">Chargement des quêtes…</div>
+<script>
+const ok = typeof SharedArrayBuffer === 'function' && self.crossOriginIsolated;
+const d = document.getElementById('diag');
+d.className = 'diag ' + (ok ? 'ok' : 'ko');
+d.textContent = ok
+  ? 'Moteur : prêt (threads disponibles)'
+  : 'Moteur : PROBLÈME — SharedArrayBuffer indisponible (crossOriginIsolated = ' + self.crossOriginIsolated + '). Le jeu ne démarrera pas.';
+
+fetch('../quests/index.json').then(r => r.json()).then(files => {
+  const list = document.getElementById('list');
+  list.textContent = '';
+  if (!files.length) list.textContent = 'Aucune quête trouvée.';
+  for (const f of files) {
+    const abs = new URL('../quests/' + encodeURIComponent(f), location.href).href;
+    const a = document.createElement('a');
+    a.className = 'q';
+    a.textContent = f.replace(/\.qst$/i, '');
+    a.href = '../www/play/index.html?open=' + encodeURIComponent(abs);
+    list.appendChild(a);
+  }
+}).catch(e => { document.getElementById('list').textContent = 'Erreur : ' + e; });
+</script>
+</body>
+</html>
