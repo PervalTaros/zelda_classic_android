@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.WindowManager;
 
 import org.mozilla.geckoview.GeckoRuntime;
-import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoView;
 
@@ -48,11 +47,12 @@ public class MainActivity extends Activity {
         setContentView(geckoView);
 
         if (sRuntime == null) {
-            GeckoRuntimeSettings settings = new GeckoRuntimeSettings.Builder()
-                    .autoplayDefault(0) // 0 = lecture automatique autorisée
-                    .build();
-            sRuntime = GeckoRuntime.create(this, settings);
+            sRuntime = GeckoRuntime.create(this);
         }
+        // Autoriser la lecture automatique du son (selon la version de GeckoView ; sinon ignoré).
+        setGeckoPref("media.autoplay.default", Integer.valueOf(0));
+        setGeckoPref("media.autoplay.blocking_policy", Integer.valueOf(0));
+        setGeckoPref("media.autoplay.block-webaudio", Boolean.FALSE);
         session = new GeckoSession();
         // Le simple fait d'avoir un délégué permet à la page de demander le plein écran
         // (l'application est déjà en plein écran immersif).
@@ -64,6 +64,18 @@ public class MainActivity extends Activity {
         geckoView.setSession(session);
         session.loadUri(startUrl);
         geckoView.requestFocus();
+    }
+
+    /** Règle une préférence du moteur par réflexion, pour compiler avec n'importe quelle version. */
+    private static void setGeckoPref(String name, Object value) {
+        try {
+            Class<?> c = Class.forName("org.mozilla.geckoview.GeckoPreferenceController");
+            Class<?> type = (value instanceof Boolean) ? Boolean.class : Integer.class;
+            java.lang.reflect.Method m = c.getMethod("setGeckoPref", String.class, type, int.class);
+            m.invoke(null, name, value, 0); // 0 = PREF_BRANCH_USER
+        } catch (Throwable t) {
+            // API absente dans cette version : on ignore.
+        }
     }
 
     private void enterImmersive() {

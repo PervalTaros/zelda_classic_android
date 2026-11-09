@@ -1,7 +1,7 @@
 """Choisit une version de GeckoView (<= MAX majeure) et l'écrit dans android/app/build.gradle."""
 import re, sys, urllib.request, xml.etree.ElementTree as ET, pathlib
 
-MAX = int(sys.argv[1]) if len(sys.argv) > 1 else 135
+MAX = 140  # version majeure maximale de GeckoView
 url = 'https://maven.mozilla.org/maven2/org/mozilla/geckoview/geckoview/maven-metadata.xml'
 xml = urllib.request.urlopen(url, timeout=120).read()
 versions = [v.text.strip() for v in ET.fromstring(xml).iter('version')]
